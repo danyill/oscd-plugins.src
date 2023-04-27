@@ -8,16 +8,27 @@ import { MessageType } from "@oscd-plugins/core"
 type Config = {
 	width: number,
 	height: number,
+	// heightPerConnection: number,
+}
+
+const messageTypeMap:{[key: string]: MessageType} = {
+	"GOOSE": MessageType.GOOSe,
+	"SMV":   MessageType.SampledValues,
 }
 
 export async function calculateLayout(ieds: IEDCommInfo[], config: Config, selectionFilter: SelectedFilter): Promise<RootNode> {
-
 	const hasSelection = Boolean(selectionFilter.selectedIED)
+
+		
+	if(selectionFilter.nameFilter !== ""){
+		ieds = ieds.filter(ied => ied.iedName.toLowerCase().includes(selectionFilter.nameFilter.toLowerCase()))
+	}
 	
-	const edges: IEDConnection[] = ieds.map( (targetIED, ii) => { 
+	let edges: IEDConnection[] = ieds.map( (targetIED, ii) => { 
 		const iedConnections: IEDConnection[] = []
-		Object.keys(targetIED.received).forEach( sourceIEDName => { 
-			
+		targetIED.received.forEach( message => {
+
+			const sourceIEDName = message.iedName
 			const sourceIEDIndex = ieds.findIndex((sourceIED) => sourceIED.iedName === sourceIEDName)
 			if(sourceIEDIndex === -1) {
 				console.warn({level: "warn", msg: "calculateLayout: source IED not found, continuing", sourceIEDName, ieds})
@@ -26,7 +37,7 @@ export async function calculateLayout(ieds: IEDCommInfo[], config: Config, selec
 			const sourceIED = ieds[sourceIEDIndex]
 
 			const selectedMessageTypes: string[] = selectionFilter.selectedMessageTypes
-			const messageType = MessageType.GOOSe
+			const messageType = messageTypeMap[message.serviceType]
 			const isRelevantMessageType: boolean = selectedMessageTypes.includes(messageType)
 
 			let isRelevant = true
@@ -66,11 +77,19 @@ export async function calculateLayout(ieds: IEDCommInfo[], config: Config, selec
 		edge.relevantIEDNames?.forEach(iedName => { relevantNodes.add(iedName) })
 	})
 
-	const children: IEDNode[] = ieds.map((ied, ii) => {
+	let children: IEDNode[] = ieds.map((ied, ii) => {
 		let isRelevant = true
 		if (hasSelection) {
-			isRelevant = relevantNodes.has(ied.iedName) || selectionFilter.selectedIED?.label === ied.iedName
+			isRelevant = relevantNodes.has(ied.iedName) || selectionFilter.selectedIED?.label === ied.iedName	
 		}
+
+		// Note: maybe for later
+		// let height = config.height
+		// const nrConnections = ied.received.length + ied.published.length
+		// if(nrConnections>0){
+		// 	height = config.heightPerConnection * nrConnections
+		// }
+
 		return {
 			id:         Id(ii),
 			width:      config.width,
@@ -81,6 +100,11 @@ export async function calculateLayout(ieds: IEDCommInfo[], config: Config, selec
 	})
 
 	const elk = new ELK()
+
+	if(selectionFilter.hideIrrelevantStuff){
+		children = children.filter(child => child.isRelevant)
+		edges = edges.filter(edge => edge.isRelevant)
+	}
 
 	// https://www.eclipse.org/elk/reference/algorithms.html 
 	const graph: ElkNode = {

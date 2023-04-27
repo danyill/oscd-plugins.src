@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## Communication Explorer [Unreleased] 
+
+## Communication Explorer [0.0.11] - 2023-04-26 
+
+### Added
+
+- Experiment: hide irrelevant stuff
+- Experiment: search by IED name
+
+## Communication Explorer [0.0.10] - 2023-04-26 
+
+### Added
+
+- Added Sampled Value Messages to the Communication Explorer
+- Filter by message type
+
+### Fixed
+
+- fixed flickering of the view in case of any change
+
 ## Communication Explorer [0.0.9] - 2023-04-21
 
 ### Fixed

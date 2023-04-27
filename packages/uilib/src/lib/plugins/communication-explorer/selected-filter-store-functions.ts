@@ -12,11 +12,16 @@ export function selectNode(node: IEDNode) {
 }
 
 export function clearSelection() {
-	selectedIEDNode.set({
-		incomingConnections:  true,
-		outgoingConnections:  true,
-		selectedMessageTypes: [...allMessageTypes],
-		selectedIED:          undefined,
+	selectedIEDNode.update(selectedFilter => {
+		return {
+			...selectedFilter,
+			incomingConnections:  true,
+			outgoingConnections:  true,
+			selectedMessageTypes: [...allMessageTypes],
+			selectedIED:          undefined,
+		// 	hideIrrelevantStuff:  false,
+		// 	nameFilter:           "",
+		}
 	})
 }
 
@@ -33,26 +38,40 @@ export function changeMessageConnectionFilterDirection(incoming: boolean, outgoi
 function addOrRemoveMessageType(list: string[], messageType: string, checked: boolean): string[] {
 	if (checked) {
 
-		if (!list.includes(messageType)) 
-		{ list.push(messageType) }
+		const containsTypeAlready = list.includes(messageType)
+		if (!containsTypeAlready) {
+			list.push(messageType)
+		}
+
 		return list
 	}
 
 	return list.filter((item) => item !== messageType)
 }
 
-export function setSelectedMessageTypes(name: string, state: boolean, oldList?: string[]) {
-	if (oldList === undefined) { oldList = [] }
-	let updatedList: string[] = []
-
-	if      (name === MessageType.GOOSe)         { updatedList = addOrRemoveMessageType(oldList, MessageType.GOOSe,         state) }
-	else if (name === MessageType.MMS)           { updatedList = addOrRemoveMessageType(oldList, MessageType.MMS,           state) }
-	else if (name === MessageType.SampledValues) { updatedList = addOrRemoveMessageType(oldList, MessageType.SampledValues, state) }
-    
+export function setSelectedMessageTypes(type: MessageType, isActived: boolean) {
 	selectedIEDNode.update((value) => {
 		return {
 			...value, 
-			selectedMessageTypes: updatedList,
+			selectedMessageTypes: addOrRemoveMessageType(value.selectedMessageTypes, type, isActived),
+		}
+	})
+}
+
+export function setHideIrrelevantStuff(hide: boolean) {
+	selectedIEDNode.update((value) => {
+		return {
+			...value, 
+			hideIrrelevantStuff: hide,
+		}
+	})
+}
+
+export function setNameFilter(filter: string) {
+	selectedIEDNode.update((value) => {
+		return {
+			...value, 
+			nameFilter: filter,
 		}
 	})
 }
