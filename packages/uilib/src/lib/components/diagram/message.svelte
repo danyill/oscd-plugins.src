@@ -52,9 +52,18 @@
 		const color = messageTypeToColorMap[edge.messageType]
 		return color || defaultColor
 	}
+
+	function selectConnection(e: Event) {
+		const connectionID = edge.id
+		const sourceIEDs = edge.sources
+		const targetIEDs = edge.targets
+
+		console.log(connectionID, "between", sourceIEDs, targetIEDs);
+	}
 </script>
 
-<g>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<g on:click={selectConnection}>
 	{#if path}
 		<path d={path} class="path-hover-box" />
 		<path d={path} class="path-strong" />
